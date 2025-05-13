@@ -16,7 +16,7 @@ export function UserHistory({ userHistory, toggleHistory }) {
 
             {userHistory.length === 0 ? (
                 <div className="text-center py-8">
-                    <p className="text-muted-foreground">You haven't registered for any tournaments yet.</p>
+                    <p className="text-muted-foreground">You haven&apos;t registered for any tournaments yet.</p>
                     <Button className="mt-4" onClick={toggleHistory}>
                         Browse Tournaments
                     </Button>
