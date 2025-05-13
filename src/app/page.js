@@ -57,7 +57,7 @@ export default function Home() {
               Welcome back,{" "}
               <span className="text-white animate-shimmer">{user.displayName || user.email}</span>!
             </motion.h2>
-            <p className="text-lg sm:text-xl text-muted-foreground mt-2">We're glad to have you here again</p>
+            <p className="text-lg sm:text-xl text-muted-foreground mt-2">We&apos;re glad to have you here again</p>
           </div>
         )}
 
