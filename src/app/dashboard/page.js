@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { ThemeToggle } from "@/app/components/theme-toggle"
 import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ParticleBackground } from "@/app/components/particle-background"
 import { Trophy, Users, Calendar, LogOut, Gamepad2, History, ChevronDown, UserCog } from "lucide-react"
 import { auth, db } from "@/app/firebase"
@@ -21,7 +27,6 @@ export default function Dashboard() {
     const [userHistory, setUserHistory] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showHistory, setShowHistory] = useState(false)
-    const [showDropdown, setShowDropdown] = useState(false)
     const router = useRouter()
 
     useEffect(() => {
@@ -80,10 +85,6 @@ export default function Dashboard() {
         setShowHistory(!showHistory)
     }
 
-    const toggleDropdown = () => {
-        setShowDropdown(!showDropdown)
-    }
-
     const features = [
         {
             icon: <Trophy className="h-8 w-8 text-amber-500" />,
@@ -123,53 +124,30 @@ export default function Dashboard() {
                 <div className="flex items-center gap-4">
                     <ThemeToggle />
 
-                    {/* Dropdown Menu */}
-                    <div className="relative">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={toggleDropdown}
-                            className="gap-2 cursor-pointer flex items-center"
-                        >
-                            <span>{username}</span>
-                            <ChevronDown className="h-4 w-4" />
-                        </Button>
-
-                        {showDropdown && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-card border border-border/50 backdrop-blur-sm z-20"
-                            >
-                                <div className="py-1">
-                                    {userRole === "admin" && (
-                                        <button
-                                            onClick={() => router.push("/admin")}
-                                            className="flex items-center px-4 py-2 text-sm w-full text-left hover:bg-accent"
-                                        >
-                                            <UserCog className="h-4 w-4 mr-2" />
-                                            Admin Panel
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={toggleHistory}
-                                        className="flex items-center px-4 py-2 text-sm w-full text-left hover:bg-accent"
-                                    >
-                                        <History className="h-4 w-4 mr-2" />
-                                        History
-                                    </button>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center px-4 py-2 text-sm w-full text-left hover:bg-accent"
-                                    >
-                                        <LogOut className="h-4 w-4 mr-2" />
-                                        Logout
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
-                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="gap-2">
+                                <span>{username}</span>
+                                <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56" align="end">
+                            {userRole === "admin" && (
+                                <DropdownMenuItem onClick={() => router.push("/admin")}>
+                                    <UserCog className="mr-2 h-4 w-4" />
+                                    <span>Admin Panel</span>
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={toggleHistory}>
+                                <History className="mr-2 h-4 w-4" />
+                                <span>History</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleLogout}>
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Logout</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </header>
 
