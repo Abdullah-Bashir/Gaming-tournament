@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ParticleBackground } from "@/app/components/particle-background"
 import { Trophy, Users, Calendar, LogOut, MapPin, DollarSign, Clock, ArrowLeft, CheckCircle } from "lucide-react"
 import { auth, db } from "@/app/firebase"
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore"
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore"
 import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 
@@ -53,6 +53,8 @@ export default function TournamentDetails() {
                 const participants = tournamentData.participants || []
                 if (participants.includes(userId)) {
                     setIsRegistered(true)
+                } else {
+                    setIsRegistered(false)
                 }
             } else {
                 toast.error("The tournament you're looking for doesn't exist.")
@@ -79,6 +81,7 @@ export default function TournamentDetails() {
 
             if (currentTournament.usedSpots >= currentTournament.spots) {
                 toast.error("This tournament is already full.")
+                setIsRegistering(false)
                 return
             }
 
@@ -99,6 +102,45 @@ export default function TournamentDetails() {
         } catch (error) {
             console.error("Registration failed:", error)
             toast.error("There was an error during registration. Please try again.")
+        } finally {
+            setIsRegistering(false)
+        }
+    }
+
+    const handleCancelRegistration = async () => {
+        if (!isRegistered) return
+
+        try {
+            setIsRegistering(true)
+            const tournamentRef = doc(db, "tournaments", tournamentId)
+
+            // Get current tournament data
+            const currentData = await getDoc(tournamentRef)
+            const currentTournament = currentData.data()
+
+            if (!currentTournament) {
+                toast.error("Tournament data is not available.")
+                setIsRegistering(false)
+                return
+            }
+
+            // Update Firestore: remove user from participants & decrement usedSpots
+            await updateDoc(tournamentRef, {
+                usedSpots: Math.max((currentTournament.usedSpots || 1) - 1, 0),
+                participants: arrayRemove(user.uid),
+            })
+
+            // Update local state
+            setTournament({
+                ...tournament,
+                usedSpots: Math.max((tournament.usedSpots || 1) - 1, 0),
+            })
+            setIsRegistered(false)
+
+            toast.success("Your registration has been canceled.")
+        } catch (error) {
+            console.error("Cancel registration failed:", error)
+            toast.error("Failed to cancel registration. Please try again.")
         } finally {
             setIsRegistering(false)
         }
@@ -258,13 +300,31 @@ export default function TournamentDetails() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, delay: 0.7 }}
-                                className="flex justify-center"
+                                className="flex flex-col justify-center items-center gap-4"
                             >
                                 {isRegistered ? (
-                                    <div className="bg-green-500/10 text-green-500 p-4 rounded-lg border border-green-500/30 flex items-center gap-2">
-                                        <CheckCircle className="h-5 w-5" />
-                                        <span>You are registered for this tournament</span>
-                                    </div>
+                                    <>
+                                        <div className="bg-green-500/10 text-green-500 p-4 rounded-lg border border-green-500/30 flex items-center gap-2">
+                                            <CheckCircle className="h-5 w-5" />
+                                            <span>You are registered for this tournament</span>
+                                        </div>
+                                        <Button
+                                            size="lg"
+                                            variant="outline"
+                                            onClick={handleCancelRegistration}
+                                            disabled={isRegistering}
+                                            className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                                        >
+                                            {isRegistering ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-500 mr-2"></div>
+                                                    Canceling...
+                                                </>
+                                            ) : (
+                                                "Cancel Registration"
+                                            )}
+                                        </Button>
+                                    </>
                                 ) : (
                                     <Button
                                         size="lg"

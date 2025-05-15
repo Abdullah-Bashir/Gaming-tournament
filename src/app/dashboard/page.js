@@ -14,7 +14,7 @@ import {
 import { ParticleBackground } from "@/app/components/particle-background"
 import { Trophy, Users, Calendar, LogOut, Gamepad2, History, ChevronDown, UserCog } from "lucide-react"
 import { auth, db } from "@/app/firebase"
-import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore"
+import { collection, getDocs, doc, getDoc } from "firebase/firestore"
 
 import { UserHistory } from "./components/user-history"
 import { TournamentList } from "./components/tournaments-list"
@@ -26,64 +26,10 @@ export default function Dashboard() {
     const [tournaments, setTournaments] = useState([])
     const [userHistory, setUserHistory] = useState([])
     const [isLoading, setIsLoading] = useState(true)
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true)
     const [showHistory, setShowHistory] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
     const router = useRouter()
-
-    useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-            if (currentUser) {
-                setUser(currentUser)
-                setUsername(currentUser.displayName || "Champion")
-
-                // Fetch user role from Firestore
-                const userDoc = await getDoc(doc(db, "users", currentUser.uid))
-                if (userDoc.exists()) {
-                    setUserRole(userDoc.data().role)
-                }
-
-                fetchAllData(currentUser.uid)
-            } else {
-                router.push("/login")
-            }
-        })
-
-        return () => unsubscribe()
-    }, [router])
-
-    const fetchAllData = async (userId) => {
-        try {
-            // Fetch all tournaments
-            const tournamentsQuery = await getDocs(collection(db, "tournaments"))
-            const tournamentData = tournamentsQuery.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data()
-            }))
-            setTournaments(tournamentData)
-
-            // Filter tournaments where user is a participant
-            const userTournaments = tournamentData.filter(tournament =>
-                tournament.participants && tournament.participants.includes(userId)
-            );
-            setUserHistory(userTournaments)
-        } catch (error) {
-            console.error("Error fetching data:", error)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const handleLogout = async () => {
-        try {
-            await auth.signOut()
-            router.push("/login")
-        } catch (error) {
-            console.error("Logout failed:", error)
-        }
-    }
-
-    const toggleHistory = () => {
-        setShowHistory(!showHistory)
-    }
 
     const features = [
         {
@@ -111,6 +57,78 @@ export default function Dashboard() {
             color: "from-purple-500 to-pink-600",
         },
     ]
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+            if (currentUser) {
+                setUser(currentUser)
+                setUsername(currentUser.displayName || "Champion")
+
+                const userDoc = await getDoc(doc(db, "users", currentUser.uid))
+                if (userDoc.exists()) {
+                    setUserRole(userDoc.data().role)
+                }
+
+                fetchAllData(currentUser.uid)
+            } else {
+                router.push("/login")
+            }
+            setIsCheckingAuth(false)
+        })
+
+        return () => unsubscribe()
+    }, [router])
+
+    const fetchAllData = async (userId) => {
+        try {
+            const tournamentsQuery = await getDocs(collection(db, "tournaments"))
+            const tournamentData = tournamentsQuery.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+            setTournaments(tournamentData)
+
+            const userTournaments = tournamentData.filter(
+                (tournament) =>
+                    tournament.participants && tournament.participants.includes(userId)
+            )
+            setUserHistory(userTournaments)
+        } catch (error) {
+            console.error("Error fetching data:", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleLogout = async () => {
+        try {
+            await auth.signOut()
+            router.push("/login")
+        } catch (error) {
+            console.error("Logout failed:", error)
+        }
+    }
+
+    const toggleHistory = () => {
+        setShowHistory(!showHistory)
+    }
+
+    // Filter tournaments based on search query (case-insensitive match on gameTitle or title)
+    const filteredTournaments = tournaments.filter((tournament) =>
+        tournament.gameTitle
+            ? tournament.gameTitle.toLowerCase().includes(searchQuery.toLowerCase())
+            : tournament.title
+                ? tournament.title.toLowerCase().includes(searchQuery.toLowerCase())
+                : false
+    )
+
+    if (isCheckingAuth) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen flex flex-col relative bg-gradient-to-br from-background to-background/90 overflow-hidden">
@@ -151,12 +169,11 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            <main className="flex-1 p-4 md:p-8 z-10">
+            <main className="flex-1 p-4 md:p-8 z-10 max-w-6xl mx-auto w-full">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="max-w-6xl mx-auto"
                 >
                     {showHistory ? (
                         <UserHistory userHistory={userHistory} toggleHistory={toggleHistory} />
@@ -177,6 +194,17 @@ export default function Dashboard() {
                                 </p>
                             </section>
 
+                            {/* SEARCH BAR */}
+                            <div className="mb-6 flex justify-center">
+                                <input
+                                    type="text"
+                                    placeholder="Search tournaments..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full max-w-md rounded-md border border-border/70 bg-background px-4 py-2 text-base text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                />
+                            </div>
+
                             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                 {features.map((feature, index) => (
                                     <motion.div
@@ -195,7 +223,8 @@ export default function Dashboard() {
                                 ))}
                             </section>
 
-                            <TournamentList tournaments={tournaments} isLoading={isLoading} />
+                            {/* TOURNAMENT LIST */}
+                            <TournamentList tournaments={filteredTournaments} isLoading={isLoading} />
                         </>
                     )}
                 </motion.div>
