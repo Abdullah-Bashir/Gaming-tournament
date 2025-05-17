@@ -4,6 +4,8 @@ import { Toaster } from "react-hot-toast"
 import { Providers } from "@/app/components/providers"
 import SetThemeClass from "@/app/components/set-theme"
 
+import AnimatedBackground from "@/app/components/animatedbackground";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -23,6 +25,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <AnimatedBackground />
+        <div id="neonGradient" />
         <SetThemeClass />
         <Providers>{children}</Providers>
         <Toaster position="top-center" toastOptions={{ duration: 4000 }} />

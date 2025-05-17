@@ -41,7 +41,7 @@ export default function Home() {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-background/80 overflow-hidden">
-      <ParticleBackground />
+    
 
       <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />

@@ -18,7 +18,13 @@ import { collection, getDocs, doc, getDoc } from "firebase/firestore"
 
 import { UserHistory } from "./components/user-history"
 import { TournamentList } from "./components/tournaments-list"
+import dynamic from "next/dynamic";
 
+// load TournamentMap only on the client, skip SSR
+const TournamentMap = dynamic(
+  () => import("./components/tournamentMap").then((mod) => mod.TournamentMap),
+  { ssr: false }
+);
 export default function Dashboard() {
     const [username, setUsername] = useState("Champion")
     const [user, setUser] = useState(null)
@@ -205,6 +211,8 @@ export default function Dashboard() {
                                 />
                             </div>
 
+
+
                             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                 {features.map((feature, index) => (
                                     <motion.div
@@ -222,6 +230,12 @@ export default function Dashboard() {
                                     </motion.div>
                                 ))}
                             </section>
+
+                            <TournamentMap
+                                tournaments={filteredTournaments}
+                                center={[0, 0]}
+                                zoom={2}
+                            />
 
                             {/* TOURNAMENT LIST */}
                             <TournamentList tournaments={filteredTournaments} isLoading={isLoading} />

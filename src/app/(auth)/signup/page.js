@@ -95,6 +95,7 @@ export default function SignupPage() {
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-background/90 relative overflow-hidden mt-3">
             <ParticleBackground />
 
+
             <div className="w-full flex items-center justify-between px-4 z-10">
                 <Link href="/">
                     <Button variant="ghost" size="icon" className="group">

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -144,3 +146,81 @@
   color: inherit;
   /* Ensure the text color is inherited */
 }
+
+
+/* custom circular marker */
+.tournament-marker {
+  background: #7B30F3;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* ensure the SVG scales nicely */
+.tournament-marker svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* styled popup */
+.leaflet-popup-content-wrapper {
+  background: rgba(20, 20, 20, 0.9);
+  color: #fff;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.leaflet-popup-content h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+}
+.leaflet-popup-content p {
+  margin: 0.3rem 0;
+  font-size: 0.875rem;
+}
+.leaflet-popup-content a {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  background: #4A9EFF;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* —————————————————————————————— */
+/* neon gradient overlay for extra glow */
+#neonGradient {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: linear-gradient(
+    135deg,
+    rgba(0,136,255,0.2),
+    rgba(0,0,0,0.8)
+  );
+  background-size: 200% 200%;
+  animation: neonShift 8s ease infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes neonShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+/* —————————————————————————————— */
+
+
+@keyframes pulse {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  50%  { transform: scale(1.4); opacity: 0.4; }
+  100% { transform: scale(1);   opacity: 0.8; }
+}
+
+
